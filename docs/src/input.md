@@ -205,8 +205,9 @@ fn key_pressed(key: Key) {
 
 A focused `TextInput` takes keys before the window does, because typing should type:
 
-- Letters, `Space`, `Backspace`, `Enter`, `Left`, `Right`, `Home`, and `End` go to the input only.
+- Letters, `Space`, `Backspace`, `Enter`, `Home`, and `End` go to the input only.
 - `Up`, `Down`, `Tab`, and `Other` skip the input and go to the window's `on_key`. That's how arrow keys can move through a list while you type in a search box.
+- `Left` and `Right` move the cursor in the input's text and also go to the window, which may have something of its own to move along, like a grid.
 - `Escape` takes focus away from the input, and then also goes to the window, which may want to close.
 
 ## Terms
