@@ -50,34 +50,12 @@ impl KeyboardHandler for WaylandState {
         _: u32,
         event: KeyEvent,
     ) {
-        let Some(surface) = self.keyboard_focus.clone() else {
-            return;
-        };
-
-        let key = to_key(&event);
-
-        // a focused text input takes the key before the window's on_key sees it
-        if focus::send(key) {
-            self.request_frame_on(&surface);
-
-            return;
-        }
-
-        let Some(window) = self.window(&surface) else {
-            return;
-        };
-
-        let Some(on_key) = &window.on_key else {
-            return;
-        };
-
-        on_key(key);
-
-        // a service the handler changed wakes its own readers, this window redraws for the rest
-        self.request_frame_on(&surface);
+        self.route_key(&event);
     }
 
-    // only sent to keyboards made with key repeat, which this one is not
+    // a held key is repeated by a timer, which delivers through the callback the keyboard
+    // is made with rather than here, so this is only for a compositor that reports a
+    // repeat itself, which none do
     fn repeat_key(
         &mut self,
         _: &Connection,
@@ -108,6 +86,41 @@ impl KeyboardHandler for WaylandState {
         _: RawModifiers,
         _: u32,
     ) {
+    }
+}
+
+impl WaylandState {
+    /*
+     * a key goes the same way whether it was pressed or is repeating because it is held
+     * down: the focused text input takes it first, the window's on_key gets what is left,
+     * and the window draws the result either way
+     */
+    pub(crate) fn route_key(&mut self, event: &KeyEvent) {
+        let Some(surface) = self.keyboard_focus.clone() else {
+            return;
+        };
+
+        let key = to_key(event);
+
+        // a focused text input takes the key before the window's on_key sees it
+        if focus::send(key) {
+            self.request_frame_on(&surface);
+
+            return;
+        }
+
+        let Some(window) = self.window(&surface) else {
+            return;
+        };
+
+        let Some(on_key) = &window.on_key else {
+            return;
+        };
+
+        on_key(key);
+
+        // a service the handler changed wakes its own readers, this window redraws for the rest
+        self.request_frame_on(&surface);
     }
 }
 

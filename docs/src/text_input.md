@@ -120,8 +120,6 @@ While an input has focus:
 - `Escape` takes focus away, and then also reaches the window's `on_key`.
 - `Up`, `Down`, and `Tab` skip the input and go straight to the window's `on_key`, so a list under a search box can be moved through with the arrow keys.
 
-Holding a key down doesn't repeat it yet.
-
 ## Password fields
 
 ```rust,ignore

@@ -201,6 +201,8 @@ fn key_pressed(key: Key) {
 - `Up`, `Down`, `Left`, `Right`, `Home`, `End`
 - `Other`: any key Amane has no name for yet
 
+A key that is held down repeats: after the compositor's delay, Amane runs `on_key` again at the compositor's rate until the key is let go. The rate and delay are the compositor's own keyboard settings, so a held arrow key walks through a list at the speed you set there.
+
 ### When a text input has focus
 
 A focused `TextInput` takes keys before the window does, because typing should type:

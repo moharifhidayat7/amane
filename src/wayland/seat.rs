@@ -1,5 +1,10 @@
-use smithay_client_toolkit::seat::{Capability, SeatHandler, SeatState, pointer::ThemeSpec};
-use wayland_client::{Connection, QueueHandle, protocol::wl_seat::WlSeat};
+use smithay_client_toolkit::seat::{
+    Capability, SeatHandler, SeatState, keyboard::KeyEvent, pointer::ThemeSpec,
+};
+use wayland_client::{
+    Connection, QueueHandle,
+    protocol::{wl_keyboard::WlKeyboard, wl_seat::WlSeat},
+};
 
 use super::WaylandState;
 
@@ -42,9 +47,21 @@ impl SeatHandler for WaylandState {
             }
 
             Capability::Keyboard => {
+                // the repeat of a key held down is timed on the event loop, and the
+                // repeated key goes the same way a press does
+                let handle = self.loop_handle.clone();
+
                 let keyboard = self
                     .seat
-                    .get_keyboard(qh, &seat, None)
+                    .get_keyboard_with_repeat(
+                        qh,
+                        &seat,
+                        None,
+                        handle,
+                        Box::new(|state: &mut WaylandState, _: &WlKeyboard, event: KeyEvent| {
+                            state.route_key(&event);
+                        }),
+                    )
                     .expect("failed to get keyboard");
 
                 self.keyboard_device = Some(keyboard);
