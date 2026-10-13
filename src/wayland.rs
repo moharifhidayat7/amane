@@ -24,7 +24,10 @@ use smithay_client_toolkit::{
     data_device_manager::{DataDeviceManagerState, data_device::DataDevice},
     delegate_dispatch2, delegate_registry,
     output::OutputState,
-    reexports::{calloop::EventLoop, calloop_wayland_source::WaylandSource},
+    reexports::{
+        calloop::{EventLoop, LoopHandle},
+        calloop_wayland_source::WaylandSource,
+    },
     registry::{ProvidesRegistryState, RegistryState},
     registry_handlers,
     seat::{SeatState, pointer::ThemedPointer},
@@ -91,6 +94,9 @@ struct WaylandState {
     // what the pointer was last set to on one of the windows, none after it leaves
     cursor_shown: Option<Cursor>,
 
+    // the event loop, kept because the keyboard repeats a held key on a timer of its own
+    loop_handle: LoopHandle<'static, WaylandState>,
+
     qh: QueueHandle<WaylandState>,
 
     running: bool,
@@ -118,6 +124,10 @@ impl WaylandApp {
             registry_queue_init(&connection).expect("failed to discover Wayland globals");
 
         let qh = event_queue.handle();
+
+        // made before the state, which keeps its handle: the keyboard is built with it,
+        // and it is what repeats a key that is held down
+        let event_loop = EventLoop::try_new().expect("failed to create event loop");
 
         let compositor =
             CompositorState::bind(&globals, &qh).expect("failed to bind wl_compositor");
@@ -167,6 +177,8 @@ impl WaylandApp {
             data_device_manager,
             data_device: None,
 
+            loop_handle: event_loop.handle(),
+
             qh,
 
             running: true,
@@ -186,8 +198,6 @@ impl WaylandApp {
 
         // a Lock::start before run() has no event loop to wake yet
         state.start_lock_if_asked();
-
-        let event_loop = EventLoop::try_new().expect("failed to create event loop");
 
         WaylandSource::new(connection, event_queue)
             .insert(event_loop.handle())

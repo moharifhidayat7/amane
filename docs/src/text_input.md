@@ -121,8 +121,6 @@ While an input has focus:
 - `Up`, `Down`, and `Tab` skip the input and go straight to the window's `on_key`, so a list under a search box can be moved through with the arrow keys.
 - `Left` and `Right` move the cursor in the text and also reach the window's `on_key`, so a grid under a search box can be moved through a cell at a time.
 
-Holding a key down doesn't repeat it yet.
-
 ## Password fields
 
 ```rust,ignore
